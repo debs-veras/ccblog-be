@@ -44,7 +44,11 @@ O CCBlog é o backend de uma plataforma de gestão acadêmica e blog, focada em 
    ```
 
 2. **Configurar as variáveis de ambiente:**
-   Copie o arquivo `.env.example` para `.env` e preencha com suas credenciais (especialmente as do Cloudinary e a URL do banco).
+   Copie o arquivo `.env.example` para `.env` e preencha com suas credenciais.
+   
+   > [!NOTE]
+   > Para o funcionamento correto do upload de imagens, é necessário criar uma conta gratuita no [Cloudinary](https://cloudinary.com/) e obter as chaves de API.
+ 
    ```bash
    cp .env.example .env
    ```
