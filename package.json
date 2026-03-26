@@ -1,0 +1,43 @@
+{
+  "name": "ccblog",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx src/server.ts",
+    "start": "tsx src/server.ts",
+    "seed": "npx tsx src/lib/seed.ts"
+  },
+  "type": "module",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "5.0.5",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^25.0.9",
+    "@types/pg": "^8.16.0",
+    "dotenv": "^17.2.3",
+    "prisma": "^7.2.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.2.0",
+    "@prisma/client": "^7.2.0",
+    "@types/multer": "^2.0.0",
+    "bcrypt": "^6.0.0",
+    "cloudinary": "^1.41.3",
+    "cors": "^2.8.5",
+    "express": "5.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.0.2",
+    "multer-storage-cloudinary": "^4.0.0",
+    "pg": "^8.17.1",
+    "sharp": "^0.34.5",
+    "zod": "^4.1.12"
+  }
+}

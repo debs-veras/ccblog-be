@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(STUDENT)
+  posts        Post[]
+  disciplines  Discipline[] @relation("TeacherDisciplines")
+  enrollments  Enrollment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+
+  posts       Post[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id          String    @id @default(uuid())
+  title       String
+  slug        String    @unique
+  description String?
+  content     String
+  published   Boolean   @default(false)
+  views       Int       @default(0)
+
+  authorId   String
+  categoryId String?
+
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category  Category? @relation(fields: [categoryId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Discipline {
+  id          String   @id @default(uuid())
+  name        String
+  code        String   @unique
+  description String?
+  materialUrl String?
+  // período da disciplina (1 a 9)
+  period      Int
+  // carga horária em horas
+  workload    Int
+  // professor responsável
+  teacherId String?
+  teacher   User? @relation("TeacherDisciplines", fields: [teacherId], references: [id])
+  // relações
+  schedules     Schedule[]
+  enrollments   Enrollment[]
+  // pré-requisitos
+  prerequisites     DisciplinePrerequisite[] @relation("Prerequisites")
+  requiredFor       DisciplinePrerequisite[] @relation("PrerequisiteOf")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DisciplinePrerequisite {
+  id String @id @default(uuid())
+
+  disciplineId   String
+  prerequisiteId String
+
+  discipline   Discipline @relation("Prerequisites", fields: [disciplineId], references: [id], onDelete: Cascade)
+  prerequisite Discipline @relation("PrerequisiteOf", fields: [prerequisiteId], references: [id], onDelete: Cascade)
+
+  @@unique([disciplineId, prerequisiteId])
+}
+
+model Schedule {
+  id           String @id @default(uuid())
+  disciplineId String
+  dayOfWeek Int 
+  startTime String
+  endTime   String 
+  discipline Discipline @relation(fields: [disciplineId], references: [id], onDelete: Cascade)
+}
+
+enum EnrollmentStatus {
+  ENROLLED
+  PASSED
+}
+
+model Enrollment {
+  id           String @id @default(uuid())
+  studentId    String
+  disciplineId String
+  period       Int
+  status       EnrollmentStatus @default(ENROLLED)
+  
+  student    User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  discipline Discipline @relation(fields: [disciplineId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@unique([studentId, disciplineId, period])
+}
