@@ -34,7 +34,9 @@ export const createDisciplineSchema = z.object({
 });
 
 // ================== Atualização ==================
-export const updateDisciplineSchema = createDisciplineSchema.partial();
+export const updateDisciplineSchema = createDisciplineSchema.partial().extend({
+  force: z.boolean().optional(),
+});
 
 // ================== Tipos TS ==================
 export type CreateDisciplineInput = z.infer<typeof createDisciplineSchema>;

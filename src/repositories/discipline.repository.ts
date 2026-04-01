@@ -42,7 +42,7 @@ export class DisciplineRepository {
   }
 
   static async update(id: string, data: UpdateDisciplineInput) {
-    const { schedules, prerequisiteIds, ...rest } = data;
+    const { schedules, prerequisiteIds, force, ...rest } = data;
     return prisma.discipline.update({
       where: { id },
       data: {

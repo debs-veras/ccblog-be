@@ -1,5 +1,6 @@
 import { prisma } from "lib/prisma";
 import { CreateEnrollmentInput } from "schemas/enrollment.schema";
+import { EnrollmentStatus } from "../generated/prisma/enums";
 
 export class EnrollmentRepository {
   static async create(data: CreateEnrollmentInput) {
@@ -104,6 +105,24 @@ export class EnrollmentRepository {
               },
             },
             schedules: true,
+          },
+        },
+      },
+    });
+  }
+
+  static async findByDisciplineId(disciplineId: string, status?: EnrollmentStatus) {
+    return prisma.enrollment.findMany({
+      where: {
+        disciplineId,
+        status,
+      },
+      include: {
+        student: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
           },
         },
       },

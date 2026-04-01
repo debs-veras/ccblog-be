@@ -7,6 +7,7 @@ import categoryRouter from "./category.routes";
 import { disciplineRouter } from "./discipline.routes";
 import { enrollmentRouter } from "./enrollment.routes";
 import { dashboardRouter } from "./dashboard.routes";
+import aiRouter from "./ai.routes";
 
 const routes: ExpressRouter = Router();
 routes.use("/auth", authRouter);
@@ -17,5 +18,6 @@ routes.use("/category", categoryRouter);
 routes.use("/discipline", disciplineRouter);
 routes.use("/enrollment", enrollmentRouter);
 routes.use("/dashboard", dashboardRouter);
+routes.use("/ai", aiRouter);
 
 export default routes;
