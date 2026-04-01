@@ -12,7 +12,7 @@ aiRouter.post(
   authMiddleware,
   roleMiddleware(["ADMIN", "TEACHER", "STUDENT"]),
   rateLimitMiddleware(10, 60 * 60 * 1000), // Limite de 10 requisições por hora para evitar spam de tokens
-  AIController.suggestMetadata
+  AIController.suggestMetadata,
 );
 
 // Chat Acadêmico (Aberto para todos os usuários logados)
@@ -20,7 +20,7 @@ aiRouter.post(
   "/academic-chat",
   authMiddleware,
   rateLimitMiddleware(50, 60 * 60 * 1000), // Limite de 50 perguntas por hora
-  AIController.academicChat
+  AIController.academicChat,
 );
 
 export default aiRouter;

@@ -56,7 +56,7 @@ export class AIService {
       const enrollments = await EnrollmentRepository.getStudentEnrollments(studentId);
       const passed = enrollments
         .filter((e) => e.status === EnrollmentStatus.PASSED)
-        .map((e) => `${e.discipline.name} (${e.discipline.code})`);
+        .map((e) => e.discipline.name);
       
       console.log(`[AI Context] Histórico do aluno: ${passed.length} matérias concluídas.`);
       if (passed.length > 0) passedContext = passed.join(", ");
@@ -66,7 +66,10 @@ export class AIService {
     const curriculumContext = disciplines.data
       .map((d: any) => {
         const teacher = d.teacher?.name || "A definir";
-        return `- ${d.name} [${d.code}] | Período: ${d.period} | Prof: ${teacher} | Carga: ${d.workload}h`;
+        const prereqs = d.prerequisites?.length > 0 
+          ? d.prerequisites.map((p: any) => p.prerequisite.name).join(", ")
+          : "Nenhum";
+        return `- ${d.name} | Período: ${d.period} | Prof: ${teacher} | Carga: ${d.workload}h | Pré-requisitos: ${prereqs}`;
       })
       .join("\n");
       
@@ -87,7 +90,8 @@ export class AIService {
       1. Use os dados acima. Se não encontrar algo, peça para o usuário contatar a secretaria.
       2. Cite o PROFESSOR sempre que falar de uma matéria.
       3. Seja conciso. NÃO repita a grade completa na resposta.
-      4. Se pedirem plano de estudos, organize por anos/semestres e respeite o limite de matérias se informado.
+      4. Se pedirem plano de estudos, organize por anos de faculdade(exemplo:2020.1)/semestres e respeite o limite de matérias se informado.
+      5. SEMPRE verifique os PRÉ-REQUISITOS ao sugerir uma ordem de matérias ou plano de estudos.
     `;
 
     // Inicia o chat com histórico e instruções de sistema
