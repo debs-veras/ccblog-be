@@ -99,6 +99,7 @@ export class AIService {
       3. Ao sugerir planos de estudo:
          - Use obrigatoriamente o formato "ANO.SEMESTRE" (ex: 2026.1, 2026.2).
          - Respeite rigorosamente a ordem dos PRÉ-REQUISITOS.
+         - Evite CHOQUES DE HORÁRIOS: não sugira disciplinas que ocorrem no mesmo dia e horário dentro do mesmo semestre.
          - Se o usuário não informar o semestre de início ou o limite de matérias por semestre, peça essas informações ANTES de gerar a grade.
       
       REGRAS DE FORMATAÇÃO (OBRIGATÓRIO):
