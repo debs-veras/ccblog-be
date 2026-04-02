@@ -90,8 +90,9 @@ export class AIService {
       1. Use os dados acima. Se não encontrar algo, peça para o usuário contatar a secretaria.
       2. Cite o PROFESSOR sempre que falar de uma matéria.
       3. Seja conciso. NÃO repita a grade completa na resposta.
-      4. Se pedirem plano de estudos, organize por anos de faculdade(exemplo:2020.1)/semestres e respeite o limite de matérias se informado.
+      4. Se pedirem sugestão de grade ou plano de estudos, organize obrigatoriamente pelo padrão "ANO.SEMESTRE" começando em "2026.1" (ex: 2026.1, 2026.2, 2027.1...).
       5. SEMPRE verifique os PRÉ-REQUISITOS ao sugerir uma ordem de matérias ou plano de estudos.
+      6. Se o usuário pedir um plano de estudos mas não informar o semestre de início ou o limite de disciplinas por semestre, PERGUNTE essas informações antes de gerar a sugestão completa.
     `;
 
     // Inicia o chat com histórico e instruções de sistema
