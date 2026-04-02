@@ -1,8 +1,9 @@
 import { geminiModel as model } from "../lib/gemini";
 import { DisciplineRepository } from "../repositories/discipline.repository";
 import { EnrollmentRepository } from "../repositories/enrollment.repository";
-import { EnrollmentStatus } from "../generated/prisma/enums";
+import { EnrollmentStatus, Role } from "../generated/prisma/enums";
 import { PostRepository } from "../repositories/post.repository";
+import { UserRepository } from "../repositories/user.repository";
 
 export class AIService {
   /**
@@ -43,14 +44,21 @@ export class AIService {
     const disciplines = await DisciplineRepository.findMany();
     console.log(`[AI Context] Disciplinas encontradas: ${disciplines.data.length}`);
 
-    // 2. Busca posts publicados (para contexto do blog)
+    // 2. Busca todos os professores do departamento
+    const teachers = await UserRepository.getAll({ role: Role.TEACHER });
+    console.log(`[AI Context] Professores encontrados: ${teachers.data.length}`);
+    const teachersContext = teachers.data
+      .map((t: any) => `- ${t.name} (E-mail: ${t.email})`)
+      .join("\n");
+
+    // 3. Busca posts publicados (para contexto do blog)
     const posts = await PostRepository.getAll({ published: true });
     console.log(`[AI Context] Posts encontrados: ${posts.data.length}`);
     const postsContext = posts.data
       .map((p: any) => `- "${p.title}" (${p.description || "N/A"})`)
       .join("\n");
 
-    // 3. Busca o histórico do aluno (se logado)
+    // 4. Busca o histórico do aluno (se logado)
     let passedContext = "Nenhum histórico disponível.";
     if (studentId) {
       const enrollments = await EnrollmentRepository.getStudentEnrollments(studentId);
@@ -64,10 +72,10 @@ export class AIService {
 
     const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-    // 4. Formata a grade curricular de forma simples
+    // 5. Formata a grade curricular de forma simples
     const curriculumContext = disciplines.data
       .map((d: any) => {
-        const teacher = d.teacher?.name || "A definir";
+        const teacher = d.teacher?.name ? `${d.teacher.name} (${d.teacher.email})` : "A definir";
         const prereqs = d.prerequisites?.length > 0 
           ? d.prerequisites.map((p: any) => p.prerequisite.name).join(", ")
           : "Nenhum";
@@ -86,6 +94,9 @@ export class AIService {
       CONTEXTO DISPONÍVEL:
       - GRADE CURRICULAR COMPLETA:
       ${curriculumContext}
+
+      - CORPO DOCENTE (PROFESSORES):
+      ${teachersContext}
       
       - ÚLTIMOS POSTS DO BLOG:
       ${postsContext}
@@ -95,7 +106,7 @@ export class AIService {
       
       REGRAS DE RESPOSTA:
       1. Use APENAS os dados fornecidos no contexto. Se uma informação não constar nos dados, oriente o aluno a procurar a coordenação.
-      2. Cite o PROFESSOR responsável sempre que mencionar uma disciplina.
+      2. Cite o PROFESSOR responsável sempre que mencionar uma disciplina, e forneça o e-mail de contato caso o aluno solicite.
       3. Ao sugerir planos de estudo:
          - Use obrigatoriamente o formato "ANO.SEMESTRE" (ex: 2026.1, 2026.2).
          - Respeite rigorosamente a ordem dos PRÉ-REQUISITOS.
@@ -118,6 +129,7 @@ export class AIService {
         parts: [{ text: systemPrompt }]
       },
     });
+
 
     const result = await chat.sendMessage(question);
     const response = await result.response;
