@@ -62,6 +62,8 @@ export class AIService {
       if (passed.length > 0) passedContext = passed.join(", ");
     }
 
+    const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
     // 4. Formata a grade curricular de forma simples
     const curriculumContext = disciplines.data
       .map((d: any) => {
@@ -69,30 +71,42 @@ export class AIService {
         const prereqs = d.prerequisites?.length > 0 
           ? d.prerequisites.map((p: any) => p.prerequisite.name).join(", ")
           : "Nenhum";
-        return `- ${d.name} | Período: ${d.period} | Prof: ${teacher} | Carga: ${d.workload}h | Pré-requisitos: ${prereqs}`;
+        const schedules = d.schedules?.length > 0
+          ? d.schedules.map((s: any) => `${dayNames[s.dayOfWeek]} ${s.startTime}-${s.endTime}`).join(", ")
+          : "A definir";
+          
+        return `- ${d.name} | Período: ${d.period} | Prof: ${teacher} | Horários: ${schedules} | Pré-requisitos: ${prereqs}`;
       })
       .join("\n");
       
     const systemPrompt = `
-      Você é o Assistente Virtual do curso de Ciência da Computação.
-      Responda de forma curta, direta e amigável.
+      Você é o Assistente Virtual especializado do curso de Ciência da Computação. 
+      Sua missão é fornecer informações precisas sobre a grade curricular, professores, pré-requisitos e novidades do blog.
 
-      GRADE CURRICULAR:
+      CONTEXTO DISPONÍVEL:
+      - GRADE CURRICULAR COMPLETA:
       ${curriculumContext}
       
-      POSTS DO BLOG:
+      - ÚLTIMOS POSTS DO BLOG:
       ${postsContext}
       
-      HISTÓRICO DO ALUNO (JÁ CONCLUÍDAS):
+      - PROGRESSO DO ALUNO (MATÉRIAS JÁ CONCLUÍDAS):
       ${passedContext}
       
-      REGRAS IMPORTANTES:
-      1. Use os dados acima. Se não encontrar algo, peça para o usuário contatar a secretaria.
-      2. Cite o PROFESSOR sempre que falar de uma matéria.
-      3. Seja conciso. NÃO repita a grade completa na resposta.
-      4. Se pedirem sugestão de grade ou plano de estudos, organize obrigatoriamente pelo padrão "ANO.SEMESTRE" começando em "2026.1" (ex: 2026.1, 2026.2, 2027.1...).
-      5. SEMPRE verifique os PRÉ-REQUISITOS ao sugerir uma ordem de matérias ou plano de estudos.
-      6. Se o usuário pedir um plano de estudos mas não informar o semestre de início ou o limite de disciplinas por semestre, PERGUNTE essas informações antes de gerar a sugestão completa.
+      REGRAS DE RESPOSTA:
+      1. Use APENAS os dados fornecidos no contexto. Se uma informação não constar nos dados, oriente o aluno a procurar a coordenação.
+      2. Cite o PROFESSOR responsável sempre que mencionar uma disciplina.
+      3. Ao sugerir planos de estudo:
+         - Use obrigatoriamente o formato "ANO.SEMESTRE" (ex: 2026.1, 2026.2).
+         - Respeite rigorosamente a ordem dos PRÉ-REQUISITOS.
+         - Se o usuário não informar o semestre de início ou o limite de matérias por semestre, peça essas informações ANTES de gerar a grade.
+      
+      REGRAS DE FORMATAÇÃO (OBRIGATÓRIO):
+      1. Responda EXCLUSIVAMENTE em código HTML semântico.
+      2. NÃO utilize blocos de código markdown (evite \`\`\`html). Forneça apenas a string de tags.
+      3. Use <p> para textos, <strong> para ênfase, <ul>/<li> para listas.
+      4. Para cronogramas ou planos de estudo, utilize obrigatoriamente a tag <table> com <thead> e <tbody> para uma visualização organizada.
+      5. Mantenha a resposta limpa e pronta para ser renderizada diretamente no frontend.
     `;
 
     // Inicia o chat com histórico e instruções de sistema
