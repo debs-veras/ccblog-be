@@ -3,7 +3,6 @@ import { Router, type Router as ExpressRouter } from "express";
 import { authMiddleware } from "middleware/auth.middleware";
 import { ownershipMiddleware } from "middleware/ownership.middleware";
 import { roleMiddleware } from "middleware/permissions.middleware";
-import { auditMiddleware } from "middleware/audit.middleware";
 import { rateLimitMiddleware } from "middleware/rate-limit.middleware";
 
 const userRouter: ExpressRouter = Router();

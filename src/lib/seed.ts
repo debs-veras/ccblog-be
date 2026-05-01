@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 
 const pool = new PrismaPg({
   connectionString:
-    "postgresql://blogdb_35p9_user:h1tqAHBaOWWKH3Rv61dkrVi1LyNY7U4Z@dpg-d724mb95pdvs738oker0-a/blogdb_35p9",
+    "postgresql://blogcc:blogpassword@localhost:5432/blogdbcc",
 });
 const prisma = new PrismaClient({ adapter: pool });
 

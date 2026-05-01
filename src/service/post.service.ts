@@ -6,6 +6,7 @@ import {
   UpdatePostInput,
   updatePostSchema,
 } from "../schemas/post.schema";
+import { NotificationService } from "./notification.service";
 
 export class PostService {
   static async getAllPosts(filters?: PostFilter) {
@@ -47,7 +48,10 @@ export class PostService {
     return PostRepository.findByAuthorId(authorId, filters);
   }
 
-  static async createPost(data: RegisterPostInput, authorId: string | undefined) {
+  static async createPost(
+    data: RegisterPostInput,
+    authorId: string | undefined,
+  ) {
     if (!authorId)
       throw { statusCode: 401, message: "Usuário não autenticado" };
     // Valida usando schema
@@ -102,11 +106,16 @@ export class PostService {
 
     const post = await PostRepository.findById(id);
     if (!post) throw { statusCode: 404, message: "Post não encontrado" };
+
     const nextPublished = !post.published;
 
     const updatedPost = await PostRepository.update(id, {
       published: nextPublished,
     });
+
+    if (!post.published && nextPublished)
+      await NotificationService.notifyNewPost(updatedPost);
+    
     return { post: updatedPost, published: nextPublished };
   }
 

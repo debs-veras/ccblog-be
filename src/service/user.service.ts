@@ -27,7 +27,8 @@ export class UserService {
     const parsed = registerUserSchema.parse(data);
     // Verifica se email já existe
     const existingUser = await UserRepository.findByEmail(parsed.email);
-    if (existingUser) throw { statusCode: 400, message: "Email já está em uso" };
+    if (existingUser)
+      throw { statusCode: 400, message: "Email já está em uso" };
     // Criptografa senha
     const hashedPassword = await bcrypt.hash(parsed.password, 10);
     const newUser = await UserRepository.create({
@@ -52,34 +53,35 @@ export class UserService {
   }
 
   // Deletar usuário
-static async deleteUser(id: string) {
-  const user = await UserRepository.findById(id);
+  static async deleteUser(id: string) {
+    const user = await UserRepository.findById(id);
 
-  if (!user) {
-    throw { statusCode: 404, message: "Usuário não encontrado" };
-  }
+    if (!user) {
+      throw { statusCode: 404, message: "Usuário não encontrado" };
+    }
 
-  // Verifica posts
-  const postsCount = await UserRepository.countPostsByUser(id);
-  if (postsCount > 0) {
-    throw {
-      statusCode: 400,
-      message: "Usuário possui posts e não pode ser deletado",
-    };
-  }
-
-  // Se for professor, verifica disciplinas
-  if (user.role === "TEACHER") {
-    const disciplinesCount = await UserRepository.countDisciplinesByTeacher(id);
-
-    if (disciplinesCount > 0) {
+    // Verifica posts
+    const postsCount = await UserRepository.countPostsByUser(id);
+    if (postsCount > 0) {
       throw {
         statusCode: 400,
-        message: "Professor possui disciplinas vinculadas",
+        message: "Usuário possui posts e não pode ser deletado",
       };
     }
-  }
 
-  return UserRepository.delete(id);
-}
+    // Se for professor, verifica disciplinas
+    if (user.role === "TEACHER") {
+      const disciplinesCount =
+        await UserRepository.countDisciplinesByTeacher(id);
+
+      if (disciplinesCount > 0) {
+        throw {
+          statusCode: 400,
+          message: "Professor possui disciplinas vinculadas",
+        };
+      }
+    }
+
+    return UserRepository.delete(id);
+  }
 }

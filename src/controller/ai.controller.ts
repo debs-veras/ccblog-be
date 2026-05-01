@@ -9,14 +9,9 @@ export class AIController {
   static async suggestMetadata(req: Request, res: Response) {
     try {
       const { title, content } = req.body;
-      if (!title || !content) {
-        return sendError(res, "Título e conteúdo são obrigatórios", 400);
-      }
-
       const metadata = await AIService.suggestMetadata(title, content);
       return sendSuccess(res, "Metadados gerados com sucesso", metadata);
     } catch (error: any) {
-      console.error("AI suggestMetadata Error:", error);
       return sendError(res, "Erro ao gerar metadados via IA", 500, error.message);
     }
   }
@@ -27,10 +22,6 @@ export class AIController {
   static async academicChat(req: Request, res: Response) {
     try {
       const { question, history } = req.body;
-      if (!question) {
-        return sendError(res, "Pergunta é obrigatória", 400);
-      }
-
       const answer = await AIService.askAcademicQuestion(question, history, req.user?.id);
       return sendSuccess(res, "Resposta gerada com sucesso", { answer });
     } catch (error: any) {

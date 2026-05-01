@@ -10,7 +10,7 @@ router.post(
   "/",
   upload.single("image"),
   authMiddleware,
-  roleMiddleware(["ADMIN", "AUTHOR"]),
+  roleMiddleware(["ADMIN", "STUDENT", "TEACHER"]),
   uploadImage,
   (req, res) => {
     return sendSuccess(res, "Imagem enviada com sucesso", {

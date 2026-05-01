@@ -25,6 +25,8 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  notificationReads NotificationRead[]
 }
 
 model Category {
@@ -56,8 +58,9 @@ model Post {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
 
+  notifications Notification[]
+}
 model Discipline {
   id          String   @id @default(uuid())
   name        String
@@ -81,7 +84,6 @@ model Discipline {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
 model DisciplinePrerequisite {
   id String @id @default(uuid())
 
@@ -93,7 +95,6 @@ model DisciplinePrerequisite {
 
   @@unique([disciplineId, prerequisiteId])
 }
-
 model Schedule {
   id           String @id @default(uuid())
   disciplineId String
@@ -107,7 +108,6 @@ enum EnrollmentStatus {
   ENROLLED
   PASSED
 }
-
 model Enrollment {
   id           String @id @default(uuid())
   studentId    String
@@ -119,4 +119,26 @@ model Enrollment {
   discipline Discipline @relation(fields: [disciplineId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   @@unique([studentId, disciplineId, period])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  type      String
+  title     String
+  message   String
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id])
+  createdAt DateTime @default(now())
+  reads NotificationRead[]
+}
+
+model NotificationRead {
+  id             String @id @default(uuid())
+  userId         String
+  notificationId String
+  read           Boolean @default(false)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, notificationId])
 }

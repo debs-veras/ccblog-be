@@ -19,7 +19,7 @@ export class DashboardService {
         .filter((s) => s.dayOfWeek === today)
         .map((s) => ({
           discipline: e.discipline.name,
-          teacher: e.discipline.teacher.name,
+          teacher: e.discipline.teacher?.name,
           startTime: s.startTime,
           endTime: s.endTime,
         })),

@@ -52,3 +52,13 @@ export type Schedule = Prisma.ScheduleModel
  * 
  */
 export type Enrollment = Prisma.EnrollmentModel
+/**
+ * Model Notification
+ * 
+ */
+export type Notification = Prisma.NotificationModel
+/**
+ * Model NotificationRead
+ * 
+ */
+export type NotificationRead = Prisma.NotificationReadModel

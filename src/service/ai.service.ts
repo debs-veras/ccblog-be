@@ -10,6 +10,8 @@ export class AIService {
    * Sugere metatags e descrição curta (meta tag) para uma postagem.
    */
   static async suggestMetadata(title: string, content: string) {
+    if (!title || !content) throw { statusCode: 404, message: "Titulo ou conteudo não encontrado" };
+    
     const prompt = `
       Você é um especialista em SEO. Com base no título e conteúdo abaixo, gere:
       1. Uma meta description de no máximo 160 caracteres (tag description).
@@ -28,7 +30,6 @@ export class AIService {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
-
     // Tenta extrair o JSON da resposta (limpando possíveis blocos de código markdown)
     const jsonStr = text.replace(/```json|```/g, "").trim();
     return JSON.parse(jsonStr);
@@ -39,21 +40,23 @@ export class AIService {
    * Agora inclui informações de professores, sugestões personalizadas e posts do blog.
    * Suporta histórico para conversas contínuas.
    */
-  static async askAcademicQuestion(question: string, history: any[] = [], studentId?: string) {
+  static async askAcademicQuestion(
+    question: string,
+    history: any[] = [],
+    studentId?: string,
+  ) {
+    if (!question) throw { statusCode: 400, message: "Pergunta é obrigatória" };
+
     // 1. Busca todas as disciplinas (grade completa)
     const disciplines = await DisciplineRepository.findMany();
-    console.log(`[AI Context] Disciplinas encontradas: ${disciplines.data.length}`);
-
     // 2. Busca todos os professores do departamento
     const teachers = await UserRepository.getAll({ role: Role.TEACHER });
-    console.log(`[AI Context] Professores encontrados: ${teachers.data.length}`);
     const teachersContext = teachers.data
       .map((t: any) => `- ${t.name} (E-mail: ${t.email})`)
       .join("\n");
 
     // 3. Busca posts publicados (para contexto do blog)
     const posts = await PostRepository.getAll({ published: true });
-    console.log(`[AI Context] Posts encontrados: ${posts.data.length}`);
     const postsContext = posts.data
       .map((p: any) => `- "${p.title}" (${p.description || "N/A"})`)
       .join("\n");
@@ -61,32 +64,41 @@ export class AIService {
     // 4. Busca o histórico do aluno (se logado)
     let passedContext = "Nenhum histórico disponível.";
     if (studentId) {
-      const enrollments = await EnrollmentRepository.getStudentEnrollments(studentId);
+      const enrollments =
+        await EnrollmentRepository.getStudentEnrollments(studentId);
       const passed = enrollments
         .filter((e) => e.status === EnrollmentStatus.PASSED)
         .map((e) => e.discipline.name);
-      
-      console.log(`[AI Context] Histórico do aluno: ${passed.length} matérias concluídas.`);
+
       if (passed.length > 0) passedContext = passed.join(", ");
     }
 
-    const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+    const dayNames = ["Seg", "Ter", "Qua", "Qui", "Sex"];
 
     // 5. Formata a grade curricular de forma simples
     const curriculumContext = disciplines.data
       .map((d: any) => {
-        const teacher = d.teacher?.name ? `${d.teacher.name} (${d.teacher.email})` : "A definir";
-        const prereqs = d.prerequisites?.length > 0 
-          ? d.prerequisites.map((p: any) => p.prerequisite.name).join(", ")
-          : "Nenhum";
-        const schedules = d.schedules?.length > 0
-          ? d.schedules.map((s: any) => `${dayNames[s.dayOfWeek]} ${s.startTime}-${s.endTime}`).join(", ")
+        const teacher = d.teacher?.name
+          ? `${d.teacher.name} (${d.teacher.email})`
           : "A definir";
-          
+        const prereqs =
+          d.prerequisites?.length > 0
+            ? d.prerequisites.map((p: any) => p.prerequisite.name).join(", ")
+            : "Nenhum";
+        const schedules =
+          d.schedules?.length > 0
+            ? d.schedules
+                .map(
+                  (s: any) =>
+                    `${dayNames[s.dayOfWeek]} ${s.startTime}-${s.endTime}`,
+                )
+                .join(", ")
+            : "A definir";
+
         return `- ${d.name} | Período: ${d.period} | Prof: ${teacher} | Horários: ${schedules} | Pré-requisitos: ${prereqs}`;
       })
       .join("\n");
-      
+
     const systemPrompt = `
       Você é o Assistente Virtual especializado do curso de Ciência da Computação. 
       Sua missão é fornecer informações precisas sobre a grade curricular, professores, pré-requisitos e novidades do blog.
@@ -126,10 +138,9 @@ export class AIService {
       history: history,
       systemInstruction: {
         role: "system",
-        parts: [{ text: systemPrompt }]
+        parts: [{ text: systemPrompt }],
       },
     });
-
 
     const result = await chat.sendMessage(question);
     const response = await result.response;
