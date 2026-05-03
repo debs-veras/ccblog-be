@@ -108,6 +108,7 @@ enum EnrollmentStatus {
   ENROLLED
   PASSED
 }
+
 model Enrollment {
   id           String @id @default(uuid())
   studentId    String

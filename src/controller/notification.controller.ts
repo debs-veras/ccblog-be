@@ -41,10 +41,10 @@ export class NotificationController {
   static async markAllAsRead(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.id;
-
-      await NotificationService.markAllAsRead(userId as string);
-
-      return sendSuccess(res, "Todas notificações foram marcadas como lidas");
+      const result = await NotificationService.markAllAsRead(userId as string);
+      return sendSuccess(res, "Todas notificações foram marcadas como lidas", {
+        count: result.count,
+      });
     } catch (err) {
       next(err);
     }

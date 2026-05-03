@@ -64,8 +64,7 @@ export class AIService {
     // 4. Busca o histórico do aluno (se logado)
     let passedContext = "Nenhum histórico disponível.";
     if (studentId) {
-      const enrollments =
-        await EnrollmentRepository.getStudentEnrollments(studentId);
+      const enrollments = await EnrollmentRepository.getStudentEnrollments(studentId);
       const passed = enrollments
         .filter((e) => e.status === EnrollmentStatus.PASSED)
         .map((e) => e.discipline.name);

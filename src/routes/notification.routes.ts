@@ -12,14 +12,14 @@ notificationRouter.get(
   NotificationController.getAll,
 );
 notificationRouter.patch(
-  "/:id/read",
-  roleMiddleware(["STUDENT"]),
-  NotificationController.markAsRead,
-);
-notificationRouter.patch(
   "/read-all",
   roleMiddleware(["STUDENT"]),
   NotificationController.markAllAsRead,
+);
+notificationRouter.patch(
+  "/:id/read",
+  roleMiddleware(["STUDENT"]),
+  NotificationController.markAsRead,
 );
 notificationRouter.delete(
   "/:id",
