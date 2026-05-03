@@ -1,11 +1,12 @@
 import { PrismaClient, Role } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcrypt";
+import "dotenv/config"; 
 
 const pool = new PrismaPg({
-  connectionString:
-    "postgresql://blogcc:blogpassword@localhost:5432/blogdbcc",
+  connectionString: process.env.DATABASE_URL,
 });
+
 const prisma = new PrismaClient({ adapter: pool });
 
 async function main() {
