@@ -7,6 +7,8 @@ import { DisciplineRepository } from "repositories/discipline.repository";
 import { UserRepository } from "repositories/user.repository";
 import { EnrollmentRepository } from "repositories/enrollment.repository";
 import { EnrollmentStatus } from "../generated/prisma/enums";
+import { AppError } from "errors/appError";
+import { ErrorCodes } from "errors/errorCodes";
 
 export class DisciplineService {
   private static validateInternalSchedules(
@@ -21,15 +23,12 @@ export class DisciplineService {
           sched1.startTime < sched2.endTime &&
           sched2.startTime < sched1.endTime
         ) {
-          throw {
-            statusCode: 400,
-            message: "Há horários sobrepostos enviados.",
-          };
+          throw new AppError(ErrorCodes.SCHEDULE_CONFLICT, 400);
         }
       }
     }
   }
-  
+
   static async createDiscipline(data: CreateDisciplineInput) {
     if (data.schedules) this.validateInternalSchedules(data.schedules);
     if (data.prerequisiteIds && data.prerequisiteIds.length > 0) {
@@ -37,13 +36,13 @@ export class DisciplineService {
         data.prerequisiteIds.map((id) => DisciplineRepository.findById(id)),
       );
       const invalid = prereqs.some((d) => !d);
-      if (invalid) throw new Error("Algum pré-requisito informado não existe");
+      if (invalid) throw new AppError(ErrorCodes.DISCIPLINE_NOT_FOUND, 404);
     }
 
     if (data.teacherId) {
       const teacher = await UserRepository.findById(data.teacherId);
       if (!teacher || teacher.role !== "TEACHER")
-        throw new Error("ID do professor inválido ou usuário não é professor");
+        throw new AppError(ErrorCodes.INVALID_TEACHER, 400);
 
       const existingDisciplines = await DisciplineRepository.findMany({
         teacherId: data.teacherId,
@@ -58,10 +57,7 @@ export class DisciplineService {
                 sched.startTime < existingSched.endTime &&
                 existingSched.startTime < sched.endTime
               ) {
-                throw {
-                  statusCode: 400,
-                  message: `Choque de horário com a disciplina: ${disc.name}`,
-                };
+                throw new AppError(ErrorCodes.SCHEDULE_TEACHER_CONFLICT, 400);
               }
             }
           }
@@ -74,20 +70,21 @@ export class DisciplineService {
   static async updateDiscipline(id: string, data: UpdateDisciplineInput) {
     if (data.schedules) this.validateInternalSchedules(data.schedules);
 
+    // Valida se a disciplina existe
     const discipline = await DisciplineRepository.findById(id);
-    if (!discipline) throw new Error("Disciplina não encontrada");
+    if (!discipline) throw new AppError(ErrorCodes.DISCIPLINE_NOT_FOUND, 400);
 
-    // Validação do professor
+    // Valida se o professor existe
     if (data.teacherId) {
       const teacher = await UserRepository.findById(data.teacherId);
       if (!teacher || teacher.role !== "TEACHER")
-        throw new Error("ID do professor inválido ou usuário não é professor");
+        throw new AppError(ErrorCodes.INVALID_TEACHER, 400);
     }
 
     // Validação de pré-requisitos
     if (data.prerequisiteIds) {
       if (data.prerequisiteIds.includes(id))
-        throw new Error("Uma disciplina não pode ser pré-requisito dela mesma");
+        throw new AppError(ErrorCodes.PREREQUISITE_SELF, 400);
 
       if (data.prerequisiteIds.length > 0) {
         const prereqs = await Promise.all(
@@ -96,36 +93,29 @@ export class DisciplineService {
           ),
         );
 
-        if (prereqs.some((d) => !d)) {
-          throw new Error("Algum pré-requisito informado não existe");
-        }
+        if (prereqs.some((d) => !d))
+          throw new AppError(ErrorCodes.PREREQUISITE_NOT_FOUND, 400);
       }
     }
 
-    // Validação de horários
     if (data.schedules && data.schedules.length > 0) {
-      const teacherId = data.teacherId ?? discipline.teacherId;
-
+      // Validação de horários com o professor
+      const teacherId = data.teacherId;
       if (teacherId) {
         const existingDisciplines = await DisciplineRepository.findMany({
           teacherId,
         });
-
         for (const sched of data.schedules) {
           for (const disc of existingDisciplines.data.filter(
             (d) => d.id !== id,
           )) {
             for (const existingSched of disc.schedules) {
-              const hasConflict =
+              if (
                 sched.dayOfWeek === existingSched.dayOfWeek &&
                 sched.startTime < existingSched.endTime &&
-                existingSched.startTime < sched.endTime;
-
-              if (hasConflict) {
-                throw new Error(
-                  `Choque de horário com a disciplina: ${disc.name}`,
-                );
-              }
+                existingSched.startTime < sched.endTime
+              )
+                throw new AppError(ErrorCodes.SCHEDULE_TEACHER_CONFLICT, 400);
             }
           }
         }
@@ -136,7 +126,6 @@ export class DisciplineService {
         id,
         EnrollmentStatus.ENROLLED,
       );
-
       const conflicts: string[] = [];
 
       for (const enrollment of enrollments) {
@@ -146,7 +135,8 @@ export class DisciplineService {
         );
 
         const otherEnrollments = studentEnrollments.filter(
-          (e) => e.disciplineId !== id && e.status === EnrollmentStatus.ENROLLED,
+          (e) =>
+            e.disciplineId !== id && e.status === EnrollmentStatus.ENROLLED,
         );
 
         for (const other of otherEnrollments) {
@@ -167,22 +157,19 @@ export class DisciplineService {
         }
       }
 
-      if (conflicts.length > 0 && !data.force) {
-        throw {
-          statusCode: 400,
-          message: `A alteração de horário causará conflitos para ${
-            conflicts.length === 1 ? "1 aluno" : `${conflicts.length} alunos`
-          }:`,
+      if (conflicts.length > 0 && !data.force)
+        throw new AppError(ErrorCodes.STUDENT_CONFLICT, 400, {
           details: conflicts,
-        };
-      }
+        });
     }
 
     return DisciplineRepository.update(id, data);
   }
 
   static async getDiscipline(id: string) {
-    return DisciplineRepository.findById(id);
+    const discipline = await DisciplineRepository.findById(id);
+    if (!discipline) throw new AppError(ErrorCodes.DISCIPLINE_NOT_FOUND, 404);
+    return discipline;
   }
 
   static async listDisciplines(filters?: DisciplineFilter) {

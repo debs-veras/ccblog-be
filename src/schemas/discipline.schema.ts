@@ -19,16 +19,12 @@ export const createDisciplineSchema = z.object({
   name: z.string().min(1, "Nome da disciplina é obrigatório"),
   code: z.string().min(1, "Código é obrigatório"),
   description: z.string().optional(),
-  materialUrl: z.union([z.string().url("URL inválida"), z.literal(""), z.null()])
-    .optional()
-    .transform(val => val === "" || val === null ? undefined : val),
-  // período da disciplina (1 a 9)
+  materialUrl: z.union([z.string().url("URL inválida"), z.literal(""), z.null()]).optional().nullable(),
+  // período da disciplina (0 a 9)
   period: z.number().min(0).max(9, "Período inválido"),
   // carga horária
   workload: z.number().min(1, "Carga horária inválida"),
-  teacherId: z.union([z.string().uuid("ID do professor inválido"), z.literal(""), z.null()])
-    .optional()
-    .transform(val => val === "" || val === null ? undefined : val),
+  teacherId: z.union([z.string().uuid("ID do professor inválido"), z.literal(""), z.null()]).optional().nullable(),
   schedules: z.array(scheduleSchema).optional(),
   prerequisiteIds: z.array(z.string().uuid()).optional(),
 });

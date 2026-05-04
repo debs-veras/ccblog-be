@@ -1,11 +1,7 @@
+import { AppError } from "errors/appError";
 import { Request, Response, NextFunction } from "express";
+import { sendError } from "util/response";
 import { ZodError } from "zod";
-import { sendError } from "../util/response";
-
-interface AppError extends Error {
-  statusCode?: number;
-  details?: any;
-}
 
 export const errorMiddleware = (
   err: unknown,
@@ -13,9 +9,6 @@ export const errorMiddleware = (
   res: Response,
   _next: NextFunction,
 ) => {
-  const isProduction = process.env.NODE_ENV === "production";
-
-  // Log do erro para debug
   console.error("Erro capturado:", err);
 
   if (err instanceof ZodError) {
@@ -23,27 +16,16 @@ export const errorMiddleware = (
       field: issue.path.join("."),
       message: issue.message,
     }));
+
     return sendError(res, "Erro de validação", 400, details);
   }
 
-  const appError = err as AppError;
-  if (appError?.statusCode && appError?.message) {
-    const details = isProduction ? undefined : appError.details;
-    return sendError(res, appError.message, appError.statusCode, details);
-  }
+  if (err instanceof AppError)
+    return sendError(res, err.message, err.statusCode, err.details);
 
-  const message = isProduction
-    ? "Erro interno do servidor"
-    : (err as any)?.message || "Erro interno do servidor";
-
-  // Extrai apenas informações serializáveis do erro
-  const details = isProduction
-    ? undefined
-    : {
-        message: (err as any)?.message,
-        name: (err as any)?.name,
-        stack: (err as any)?.stack,
-      };
-
-  return sendError(res, message, 500, details);
+  return sendError(res, (err as any)?.message, 500, {
+    name: (err as any)?.name,
+    message: (err as any)?.message,
+    stack: (err as any)?.stack,
+  });
 };
