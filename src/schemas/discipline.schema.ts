@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // ================== Horários ==================
 export const scheduleSchema = z.object({
-  dayOfWeek: z.number().min(0).max(4, "Dia da semana inválido (0-6)"),
+  dayOfWeek: z.number().min(0).max(4, "Dia da semana inválido (0-4)"),
   startTime: z
     .string()
     .regex(/^\d{2}:\d{2}$/, "Formato de hora inválido, ex: 08:00"),
