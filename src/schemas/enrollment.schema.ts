@@ -8,7 +8,7 @@ export const enrollmentStatusSchema = z.enum([
 export const createEnrollmentSchema = z.object({
   studentId: z.string().uuid("ID do estudante inválido"),
   disciplineId: z.string().uuid("ID da disciplina inválida"),
-  period: z.number().min(1, "Período deve ser maior que 0"),
+  period: z.number().min(0, "Período deve ser maior que 0"),
   status: enrollmentStatusSchema.optional().default("ENROLLED"),
 });
 
