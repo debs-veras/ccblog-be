@@ -19,24 +19,64 @@ export class NotificationJob {
   // }
 
   public static async sendDailyClasses() {
-    // 1. Mapeia o dia da semana do JS (0-6, onde 0=Dom) para o seu banco (0-4, onde 0=Seg)
+    console.log("Buscando aulas do dia...");
+
+    // JS:
+    // 0 = Domingo
+    // 1 = Segunda
+    // ...
+    // 6 = Sábado
+
     const todayJs = new Date().getDay();
+
+    // Banco:
+    // 0 = Segunda
+    // 1 = Terça
+    // ...
+    // 4 = Sexta
+
     const dayOfWeek = todayJs - 1;
 
-    if (dayOfWeek < 0 || dayOfWeek > 4) return;
+    // Ignora sábado/domingo
+    if (dayOfWeek < 0 || dayOfWeek > 4) {
+      console.log("Hoje não é dia útil.");
+      return;
+    }
 
-    // 2. Busca alunos e suas matrículas ativas que têm aula hoje
     const students = await prisma.user.findMany({
-      where: { role: "STUDENT" },
+      where: {
+        role: "STUDENT",
+
+        enrollments: {
+          some: {
+            status: "ENROLLED",
+
+            discipline: {
+              schedules: {
+                some: {
+                  dayOfWeek,
+                },
+              },
+            },
+          },
+        },
+      },
+
       include: {
         enrollments: {
-          where: { status: "ENROLLED" },
+          where: {
+            status: "ENROLLED",
+          },
+
           include: {
             discipline: {
               include: {
                 schedules: {
-                  where: { dayOfWeek },
+                  where: {
+                    dayOfWeek,
+                  },
                 },
+
                 teacher: true,
               },
             },
@@ -45,48 +85,107 @@ export class NotificationJob {
       },
     });
 
-    for (const student of students) {
-      // Filtra apenas matrículas que possuem horários cadastrados para hoje
-      const classesToday = student.enrollments
-        .filter((e) => e.discipline.schedules.length > 0)
-        .map((e) => ({
-          name: e.discipline.name,
-          schedules: e.discipline.schedules,
-          teacher: e.discipline.teacher?.name || "A definir",
-        }));
+    console.log(`${students.length} alunos encontrados.`);
 
-      await this.emailTemplate(student, classesToday);
-    }
+    await Promise.all(
+      students.map(async (student) => {
+        const classesToday = student.enrollments
+          .filter((e) => e.discipline.schedules.length > 0)
+          .map((e) => ({
+            name: e.discipline.name,
+            schedules: e.discipline.schedules,
+            teacher: e.discipline.teacher?.name || "A definir",
+          }));
+
+        if (classesToday.length === 0) return;
+
+        return this.sendDailyEmail(student, classesToday);
+      }),
+    );
+
+    console.log("Todos emails enviados.");
   }
 
-  private static async emailTemplate(student: any, classes: any[]) {
+  private static async sendDailyEmail(student: any, classes: any[]) {
     const classListHtml = classes
       .map(
         (c) => `
-      <div style="margin-bottom: 15px; padding: 10px; border-left: 4px solid #3b82f6; background: #f8fafc;">
-        <strong style="font-size: 16px;">${c.name}</strong><br/>
-        <span>Prof: ${c.teacher}</span><br/>
-        <span>Horário: ${c.schedules.map((s: any) => `${s.startTime} - ${s.endTime}`).join(", ")}</span>
-      </div>
-    `,
+          <div
+            style="
+              margin-bottom: 15px;
+              padding: 10px;
+              border-left: 4px solid #3b82f6;
+              background: #f8fafc;
+              border-radius: 6px;
+            "
+          >
+            <strong style="font-size: 16px;">
+              ${c.name}
+            </strong>
+
+            <br />
+
+            <span>
+              Professor: ${c.teacher}
+            </span>
+
+            <br />
+
+            <span>
+              Horário:
+              ${c.schedules
+                .map((s: any) => `${s.startTime} - ${s.endTime}`)
+                .join(", ")}
+            </span>
+          </div>
+        `,
       )
       .join("");
 
     const html = `
-      <div style="font-family: sans-serif; color: #333; margin: 0 auto;">
-        <h2 style="color: #1e40af;">Bom dia, ${student.name}! 📚</h2>
-        <p>Aqui estão suas aulas de hoje:</p>
+      <div
+        style="
+          font-family: Arial, sans-serif;
+          max-width: 600px;
+          margin: 0 auto;
+          color: #333;
+        "
+      >
+        <h2 style="color: #1e40af;">
+          Bom dia, ${student.name}! 📚
+        </h2>
+
+        <p>
+          Aqui estão suas aulas de hoje:
+        </p>
+
         ${classListHtml}
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
-        <p style="font-size: 12px; color: #666;">Este é um aviso automático do CC Blog.</p>
+
+        <hr
+          style="
+            border: 0;
+            border-top: 1px solid #eee;
+            margin: 20px 0;
+          "
+        />
+
+        <p
+          style="
+            font-size: 12px;
+            color: #666;
+          "
+        >
+          Este é um aviso automático do CC Blog.
+        </p>
       </div>
     `;
 
     try {
       await sendMail(student.email, "CC Blog - Suas aulas de hoje", html);
-      console.log(`E-mail enviado para: ${student.email}`);
+
+      console.log(`Email enviado para ${student.email}`);
     } catch (error) {
-      console.error(`Erro ao enviar para ${student.email}:`, error);
+      console.error(`Erro ao enviar para ${student.email}`, error);
     }
   }
 }

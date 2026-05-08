@@ -22,19 +22,22 @@ routes.use("/enrollment", enrollmentRouter);
 routes.use("/dashboard", dashboardRouter);
 routes.use("/ai", aiRouter);
 routes.use("/notifications", notificationRouter);
-routes.get("/cron/send-daily-classes", async (req, res) => {
-  try {
-    await NotificationJob.sendDailyClasses();
-    return res.json({
-      success: true,
-    });
-  } catch (error) {
-    console.error(error);
+routes.get("/cron/send-daily-classes", async (_, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Job iniciado",
+  });
 
-    return res.status(500).json({
-      error: true,
-    });
-  }
+  setImmediate(async () => {
+    try {
+      console.log("Iniciando envio diário...");
+
+      await NotificationJob.sendDailyClasses();
+
+      console.log("Envio diário finalizado!");
+    } catch (error) {
+      console.error("Erro no envio:", error);
+    }
+  });
 });
-
 export default routes;
