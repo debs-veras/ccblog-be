@@ -72,9 +72,7 @@ export class PostController {
 
   static async update(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params;
-      const post = await PostService.updatePost(id as string, req.body);
-
+      const post = await PostService.updatePost({ ...req.body, id: req.params.id });
       return sendSuccess(res, "Post atualizado com sucesso", post);
     } catch (err) {
       next(err);

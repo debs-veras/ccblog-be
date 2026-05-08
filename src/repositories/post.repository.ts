@@ -3,13 +3,11 @@ import { PostFilter, PaginatedResponse } from "../models/post.model";
 import { RegisterPostInput, UpdatePostInput } from "@schemas/post.schema";
 
 export class PostRepository {
-  // Listar todos os posts (com filtros opcionais)
   static async getAll(filters?: PostFilter): Promise<PaginatedResponse<any>> {
     const where: any = {};
     const and: any[] = [];
 
-    if (filters?.title)
-      and.push({ title: { contains: filters.title, mode: "insensitive" } });
+    if (filters?.title) and.push({ title: { contains: filters.title, mode: "insensitive" } });
     if (filters?.published !== undefined) {
       const published =
         typeof filters.published === "string"
@@ -18,10 +16,7 @@ export class PostRepository {
 
       and.push({ published });
     }
-    if (filters?.author)
-      and.push({
-        author: { name: { contains: filters.author, mode: "insensitive" } },
-      });
+    if (filters?.author) and.push({ author: { name: { contains: filters.author, mode: "insensitive" } } });
     if (filters?.authorId) and.push({ authorId: filters.authorId });
     if (filters?.categoryId) and.push({ categoryId: filters.categoryId });
     if (filters?.startDate || filters?.endDate) {
@@ -122,7 +117,8 @@ export class PostRepository {
     });
   }
 
-  static async update(id: string, data: UpdatePostInput) {
+  static async update(data: UpdatePostInput) {
+    const { id } = data;
     return prisma.post.update({
       where: { id },
       data,
