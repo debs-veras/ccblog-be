@@ -9,7 +9,7 @@ import { enrollmentRouter } from "./enrollment.routes";
 import { dashboardRouter } from "./dashboard.routes";
 import aiRouter from "./ai.routes";
 import notificationRouter from "./notification.routes";
-import { NotificationJob } from "service/notificationJob.service";
+import { NotificationJob } from "../service/notificationJob.service";
 
 const routes: ExpressRouter = Router();
 routes.use("/auth", authRouter);
