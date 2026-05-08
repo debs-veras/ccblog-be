@@ -10,8 +10,9 @@ export class AIService {
    * Sugere metatags e descrição curta (meta tag) para uma postagem.
    */
   static async suggestMetadata(title: string, content: string) {
-    if (!title || !content) throw { statusCode: 404, message: "Titulo ou conteudo não encontrado" };
-    
+    if (!title || !content)
+      throw { statusCode: 404, message: "Titulo ou conteudo não encontrado" };
+
     const prompt = `
       Você é um especialista em SEO. Com base no título e conteúdo abaixo, gere:
       1. Uma meta description de no máximo 160 caracteres (tag description).
@@ -45,7 +46,7 @@ export class AIService {
     history: any[] = [],
     studentId?: string,
   ) {
-    if (!question) throw { statusCode: 400, message: "Pergunta é obrigatória" };
+    if (!question) throw new Error("Pergunta é obrigatória");
 
     // 1. Busca todas as disciplinas (grade completa)
     const disciplines = await DisciplineRepository.findMany();
@@ -64,12 +65,9 @@ export class AIService {
     // 4. Busca o histórico do aluno (se logado)
     let passedContext = "Nenhum histórico disponível.";
     if (studentId) {
-      const enrollments = await EnrollmentRepository.getStudentEnrollments(studentId);
-      const passed = enrollments
-        .filter((e) => e.status === EnrollmentStatus.PASSED)
-        .map((e) => e.discipline.name);
-
-      if (passed.length > 0) passedContext = passed.join(", ");
+      const enrollments =
+        await EnrollmentRepository.getStudentEnrollments(studentId);
+      if (enrollments.length > 0) passedContext = JSON.stringify(enrollments);
     }
 
     const dayNames = ["Seg", "Ter", "Qua", "Qui", "Sex"];

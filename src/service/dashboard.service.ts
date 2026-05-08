@@ -8,11 +8,10 @@ export class DashboardService {
 
     const enrolled = enrollments.filter((e) => e.status === "ENROLLED");
     const passed = enrollments.filter((e) => e.status === "PASSED");
-
     const totalDisciplines = await prisma.discipline.count();
-
     const progress = totalDisciplines > 0 ? (passed.length / totalDisciplines) * 100 : 0;
-    const today = new Date().getDay();
+    const today = new Date().getDay() - 1;
+
 
     const upcomingClasses = enrolled.flatMap((e) =>
       e.discipline.schedules
@@ -39,26 +38,10 @@ export class DashboardService {
   static async getTeacherDashboard(teacherId: string) {
     if (!teacherId) throw { statusCode: 400, message: "Professor não encontrado" };
 
-    const totalDisciplines = await prisma.discipline.count({
-      where: { teacherId },
-    });
-
-    const totalStudents = await prisma.enrollment.count({
-      where: {
-        discipline: { teacherId },
-        status: "ENROLLED",
-      },
-    });
-
-    const totalPosts = await prisma.post.count({
-      where: { authorId: teacherId, published: true },
-    });
-
-    const viewsAggregation = await prisma.post.aggregate({
-      where: { authorId: teacherId },
-      _sum: { views: true },
-    });
-    
+    const totalDisciplines = await prisma.discipline.count({ where: { teacherId }});
+    const totalStudents = await prisma.enrollment.count({ where: { discipline: { teacherId }, status: "ENROLLED" }});
+    const totalPosts = await prisma.post.count({ where: { authorId: teacherId, published: true }});
+    const viewsAggregation = await prisma.post.aggregate({ where: { authorId: teacherId }, _sum: { views: true }});
     const totalViews = viewsAggregation._sum.views || 0;
 
     const topPosts = await prisma.post.findMany({
