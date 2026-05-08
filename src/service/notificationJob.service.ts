@@ -3,11 +3,11 @@ import { prisma } from "../lib/prisma";
 import { sendMail } from "../lib/mail";
 
 export class NotificationJob {
-  // static init() {
-  //   // Agendado para rodar de Segunda a Sexta às 07:00 da manhã
-  //   // Formato: min hora dia_mes mes dia_semana
+  static init() {
+    // Agendado para rodar de Segunda a Sexta às 07:00 da manhã
+    // Formato: min hora dia_mes mes dia_semana
   //   cron.schedule(
-  //     "0 7 * * 1-5",
+  //     "* * * * *",
   //     async () => {
   //       await this.sendDailyClasses();
   //     },
@@ -15,18 +15,9 @@ export class NotificationJob {
   //       timezone: "America/Sao_Paulo",
   //     },
   //   );
-  //   console.log("Notificações agendadas!");
   // }
 
   public static async sendDailyClasses() {
-    console.log("Buscando aulas do dia...");
-
-    // JS:
-    // 0 = Domingo
-    // 1 = Segunda
-    // ...
-    // 6 = Sábado
-
     const todayJs = new Date().getDay();
 
     // Banco:
@@ -38,45 +29,19 @@ export class NotificationJob {
     const dayOfWeek = todayJs - 1;
 
     // Ignora sábado/domingo
-    if (dayOfWeek < 0 || dayOfWeek > 4) {
-      console.log("Hoje não é dia útil.");
-      return;
-    }
+    if (dayOfWeek < 0 || dayOfWeek > 4) return;
 
     const students = await prisma.user.findMany({
-      where: {
-        role: "STUDENT",
-
-        enrollments: {
-          some: {
-            status: "ENROLLED",
-
-            discipline: {
-              schedules: {
-                some: {
-                  dayOfWeek,
-                },
-              },
-            },
-          },
-        },
-      },
-
+      where: { role: "STUDENT" },
       include: {
         enrollments: {
-          where: {
-            status: "ENROLLED",
-          },
-
+          where: { status: "ENROLLED" },
           include: {
             discipline: {
               include: {
                 schedules: {
-                  where: {
-                    dayOfWeek,
-                  },
+                  where: { dayOfWeek },
                 },
-
                 teacher: true,
               },
             },
@@ -84,8 +49,6 @@ export class NotificationJob {
         },
       },
     });
-
-    console.log(`${students.length} alunos encontrados.`);
 
     await Promise.all(
       students.map(async (student) => {
@@ -96,14 +59,15 @@ export class NotificationJob {
             schedules: e.discipline.schedules,
             teacher: e.discipline.teacher?.name || "A definir",
           }));
-
+        console.log({
+          student: student.name,
+          classesToday,
+        });
         if (classesToday.length === 0) return;
 
         return this.sendDailyEmail(student, classesToday);
       }),
     );
-
-    console.log("Todos emails enviados.");
   }
 
   private static async sendDailyEmail(student: any, classes: any[]) {
@@ -182,8 +146,6 @@ export class NotificationJob {
 
     try {
       await sendMail(student.email, "CC Blog - Suas aulas de hoje", html);
-
-      console.log(`Email enviado para ${student.email}`);
     } catch (error) {
       console.error(`Erro ao enviar para ${student.email}`, error);
     }
