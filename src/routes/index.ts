@@ -22,7 +22,7 @@ routes.use("/enrollment", enrollmentRouter);
 routes.use("/dashboard", dashboardRouter);
 routes.use("/ai", aiRouter);
 routes.use("/notifications", notificationRouter);
-routes.post("/cron/send-daily-classes", async (req, res) => {
+routes.get("/cron/send-daily-classes", async (req, res) => {
   try {
     await NotificationJob.sendDailyClasses();
     return res.json({
@@ -30,6 +30,7 @@ routes.post("/cron/send-daily-classes", async (req, res) => {
     });
   } catch (error) {
     console.error(error);
+
     return res.status(500).json({
       error: true,
     });
