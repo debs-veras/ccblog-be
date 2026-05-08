@@ -30,11 +30,7 @@ routes.get("/cron/send-daily-classes", async (_, res) => {
 
   setImmediate(async () => {
     try {
-      console.log("Iniciando envio diário...");
-
       await NotificationJob.sendDailyClasses();
-
-      console.log("Envio diário finalizado!");
     } catch (error) {
       console.error("Erro no envio:", error);
     }

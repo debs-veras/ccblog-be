@@ -10,14 +10,8 @@ export async function sendMail(to: string, subject: string, html: string) {
       subject,
       html,
     });
-
-    console.dir(response, {
-      depth: null,
-    });
-
     return response;
   } catch (error) {
-    console.error("RESEND ERROR:");
     console.error(error);
     throw error;
   }
