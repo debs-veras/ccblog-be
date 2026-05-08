@@ -9,6 +9,7 @@ import { enrollmentRouter } from "./enrollment.routes";
 import { dashboardRouter } from "./dashboard.routes";
 import aiRouter from "./ai.routes";
 import notificationRouter from "./notification.routes";
+import { NotificationJob } from "service/notificationJob.service";
 
 const routes: ExpressRouter = Router();
 routes.use("/auth", authRouter);
@@ -21,5 +22,18 @@ routes.use("/enrollment", enrollmentRouter);
 routes.use("/dashboard", dashboardRouter);
 routes.use("/ai", aiRouter);
 routes.use("/notifications", notificationRouter);
+routes.post("/cron/send-daily-classes", async (req, res) => {
+  try {
+    await NotificationJob.sendDailyClasses();
+    return res.json({
+      success: true,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      error: true,
+    });
+  }
+});
 
 export default routes;
