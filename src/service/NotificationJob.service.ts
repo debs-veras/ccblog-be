@@ -1,17 +1,24 @@
-import cron from "node-cron";
+// import cron from "node-cron";
 import { prisma } from "../lib/prisma";
 import { sendMail } from "../lib/mail";
 
 export class NotificationJob {
-  static init() {
-    // Agendado para rodar de Segunda a Sexta às 07:00 da manhã
-    // Formato: min hora dia_mes mes dia_semana
-    cron.schedule("0 7 * * 1-5", async () => {
-      await this.sendDailyClasses();
-    });
-  }
+  // static init() {
+  //   // Agendado para rodar de Segunda a Sexta às 07:00 da manhã
+  //   // Formato: min hora dia_mes mes dia_semana
+  //   cron.schedule(
+  //     "0 7 * * 1-5",
+  //     async () => {
+  //       await this.sendDailyClasses();
+  //     },
+  //     {
+  //       timezone: "America/Sao_Paulo",
+  //     },
+  //   );
+  //   console.log("Notificações agendadas!");
+  // }
 
-  private static async sendDailyClasses() {
+  public static async sendDailyClasses() {
     // 1. Mapeia o dia da semana do JS (0-6, onde 0=Dom) para o seu banco (0-4, onde 0=Seg)
     const todayJs = new Date().getDay();
     const dayOfWeek = todayJs - 1;
@@ -66,7 +73,7 @@ export class NotificationJob {
       .join("");
 
     const html = `
-      <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
+      <div style="font-family: sans-serif; color: #333; margin: 0 auto;">
         <h2 style="color: #1e40af;">Bom dia, ${student.name}! 📚</h2>
         <p>Aqui estão suas aulas de hoje:</p>
         ${classListHtml}

@@ -3,7 +3,7 @@ import http from "http";
 import { Server } from "socket.io";
 import app from "./app";
 import { prisma } from "lib/prisma";
-import { NotificationJob } from "service/NotificationJob.service";
+import { NotificationJob } from "service/notificationJob.service";
 declare global {
   var io: Server;
 }
@@ -16,7 +16,7 @@ const io = new Server(server, {
   cors: { origin: "*" },
 });
 
-NotificationJob.init();
+// NotificationJob.init();
 // deixa global (MVP)
 global.io = io;
 // config socket
