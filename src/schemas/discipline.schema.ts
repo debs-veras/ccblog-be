@@ -18,7 +18,7 @@ export const scheduleSchema = z.object({
 export const createDisciplineSchema = z.object({
   name: z.string().min(1, "Nome da disciplina é obrigatório"),
   code: z.string().min(1, "Código é obrigatório"),
-  description: z.string().optional(),
+  description: z.string().optional().nullable(),
   materialUrl: z.union([z.string().url("URL inválida"), z.literal(""), z.null()]).optional().nullable(),
   // período da disciplina (0 a 9)
   period: z.number().min(0).max(9, "Período inválido"),

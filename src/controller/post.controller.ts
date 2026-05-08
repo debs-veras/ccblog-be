@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { sendSuccess } from "../util/response";
 import { PostService } from "../service/post.service";
-import { registerPostSchema } from "@schemas/post.schema";
-
 export class PostController {
   static async getAll(req: Request, res: Response, next: NextFunction) {
     try {
@@ -17,7 +15,10 @@ export class PostController {
   static async getPublished(req: Request, res: Response, next: NextFunction) {
     try {
       const filters = req.query;
-      const result = await PostService.getAllPosts({...filters, published: true});
+      const result = await PostService.getAllPosts({
+        ...filters,
+        published: true,
+      });
       return sendSuccess(res, "Lista de posts publicados", result);
     } catch (err) {
       next(err);
@@ -62,9 +63,7 @@ export class PostController {
   static async create(req: Request, res: Response, next: NextFunction) {
     try {
       const authorId = req.user?.id as string;
-      const parsed = registerPostSchema.parse(req.body);
-      const post = await PostService.createPost(parsed, authorId);
-
+      const post = await PostService.createPost({ ...req.body, authorId });
       return sendSuccess(res, "Post criado com sucesso", post, 201);
     } catch (err) {
       next(err);

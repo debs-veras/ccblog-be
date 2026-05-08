@@ -8,7 +8,8 @@ export class PostRepository {
     const where: any = {};
     const and: any[] = [];
 
-    if (filters?.title) and.push({ title: { contains: filters.title, mode: "insensitive" } });
+    if (filters?.title)
+      and.push({ title: { contains: filters.title, mode: "insensitive" } });
     if (filters?.published !== undefined) {
       const published =
         typeof filters.published === "string"
@@ -38,7 +39,11 @@ export class PostRepository {
     if (and.length) where.AND = and;
 
     const isPaginated = !!(filters?.limit && filters.limit > 0);
-    const page = isPaginated ? (filters?.page && filters.page > 0 ? filters.page : 1) : 1;
+    const page = isPaginated
+      ? filters?.page && filters.page > 0
+        ? filters.page
+        : 1
+      : 1;
     const limit = isPaginated ? Number(filters!.limit) : undefined;
     const skip = isPaginated ? (page - 1) * limit! : undefined;
 
@@ -104,7 +109,7 @@ export class PostRepository {
         description: data.description,
         content: data.content,
         slug: data.slug,
-        published: data.published || false,
+        published: false,
         author: { connect: { id: data.authorId } },
         category: data.categoryId
           ? { connect: { id: data.categoryId } }
@@ -131,7 +136,7 @@ export class PostRepository {
   static async delete(id: string) {
     return prisma.post.delete({ where: { id } });
   }
-  
+
   static async incrementViews(id: string) {
     return prisma.post.update({
       where: { id },

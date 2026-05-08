@@ -48,22 +48,18 @@ export class PostService {
     return PostRepository.findByAuthorId(authorId, filters);
   }
 
-  static async createPost(
-    data: RegisterPostInput,
-    authorId: string | undefined,
-  ) {
-    if (!authorId)
-      throw { statusCode: 401, message: "Usuário não autenticado" };
+  static async createPost(data: RegisterPostInput) {
+    const authorId = data.authorId;
+    if (!authorId) throw { statusCode: 401, message: "Usuário não autenticado" };
     // Valida usando schema
     const parsed = registerPostSchema.parse(data);
     const existingPost = await PostRepository.findBySlug(parsed.slug);
-
     if (existingPost) throw { statusCode: 400, message: "Slug já existe" };
 
     const postData = {
       ...parsed,
       authorId,
-      categoryId: parsed.categoryId || undefined,
+      categoryId: parsed.categoryId,
     };
 
     const newPost = await PostRepository.create(postData);
@@ -115,7 +111,7 @@ export class PostService {
 
     if (!post.published && nextPublished)
       await NotificationService.notifyNewPost(updatedPost);
-    
+
     return { post: updatedPost, published: nextPublished };
   }
 

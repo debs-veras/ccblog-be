@@ -7,7 +7,7 @@ export class NotificationJob {
     // Agendado para rodar de Segunda a Sexta às 07:00 da manhã
     // Formato: min hora dia_mes mes dia_semana
   //   cron.schedule(
-  //     "* * * * *",
+  //     "0 7 * * 1-5", 
   //     async () => {
   //       await this.sendDailyClasses();
   //     },
