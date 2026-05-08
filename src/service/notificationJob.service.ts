@@ -3,7 +3,7 @@ import { prisma } from "../lib/prisma";
 import { sendMail } from "../lib/mail";
 
 export class NotificationJob {
-  static init() {
+  // static init() {
     // Agendado para rodar de Segunda a Sexta às 07:00 da manhã
     // Formato: min hora dia_mes mes dia_semana
   //   cron.schedule(
