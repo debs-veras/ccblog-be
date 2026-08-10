@@ -6,6 +6,8 @@ const authRouter: ExpressRouter = Router();
 
 // POST /auth/login
 authRouter.post("/login", AuthController.login);
+// POST /auth/google
+authRouter.post("/google", AuthController.googleLogin);
 // POST /auth/logout
 authRouter.post("/logout", authMiddleware, AuthController.logout);
 // GET /auth/validate

@@ -45,6 +45,18 @@ export class UserController {
     }
   }
 
+  static async updateProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) throw { statusCode: 401, message: "Usuário não autenticado" };
+      const { name, avatarUrl } = req.body;
+      const user = await UserService.updateProfile(userId, { name, avatarUrl });
+      return sendSuccess(res, "Perfil atualizado com sucesso", user);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const id = req.params.id;

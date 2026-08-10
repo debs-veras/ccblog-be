@@ -13,6 +13,7 @@ export const updateUserSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório").optional(),
   email: z.string().email("Email inválido").optional(),
   role: z.enum(["ADMIN", "STUDENT", "TEACHER"]).optional(),
+  avatarUrl: z.string().nullable().optional(),
 });
 
 // Tipos inferidos automaticamente dos schemas

@@ -39,6 +39,13 @@ export class UserService {
     return newUser;
   }
 
+  // Atualizar próprio perfil
+  static async updateProfile(userId: string, data: { name?: string; avatarUrl?: string }) {
+    const user = await UserRepository.findById(userId);
+    if (!user) throw { statusCode: 404, message: "Usuário não encontrado" };
+    return UserRepository.update(userId, data);
+  }
+
   // Atualizar usuário (sem alterar senha)
   static async updateUser(id: string, data: UpdateUserInput) {
     const user = await UserRepository.findById(id);

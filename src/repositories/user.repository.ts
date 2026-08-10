@@ -56,6 +56,26 @@ export class UserRepository {
     return prisma.user.findUnique({ where: { email } });
   }
 
+  static async findByGoogleId(googleId: string) {
+    return prisma.user.findUnique({ where: { googleId } });
+  }
+
+  static async updateGoogleId(id: string, googleId: string, avatarUrl?: string) {
+    return prisma.user.update({
+      where: { id },
+      data: { googleId, ...(avatarUrl ? { avatarUrl } : {}) },
+      omit: { password: true },
+    });
+  }
+
+  static async updateAvatarUrl(id: string, avatarUrl: string) {
+    return prisma.user.update({
+      where: { id },
+      data: { avatarUrl },
+      omit: { password: true },
+    });
+  }
+
   static async findById(id: string) {
     return prisma.user.findUnique({
       where: { id },

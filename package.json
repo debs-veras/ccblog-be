@@ -6,7 +6,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
-    "seed": "npx tsx src/lib/seed.ts"
+    "seed": "npx tsx src/lib/seed.ts",
+    "format": "prettier --write \"src/**/*.{ts,js,json}\""
   },
   "type": "module",
   "keywords": [],
@@ -23,6 +24,7 @@
     "@types/nodemailer": "^8.0.0",
     "@types/pg": "^8.16.0",
     "dotenv": "^17.2.3",
+    "prettier": "^3.5.0",
     "prisma": "^7.2.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"

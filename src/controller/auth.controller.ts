@@ -18,6 +18,16 @@ export class AuthController {
     }
   }
 
+  static async googleLogin(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { credential } = req.body;
+      const { token, user } = await AuthService.loginWithGoogle(credential);
+      return sendSuccess(res, "Login com Google realizado com sucesso", { token, user });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   static async logout(req: Request, res: Response, next: NextFunction) {
     try {
       const authHeader = req.headers.authorization;

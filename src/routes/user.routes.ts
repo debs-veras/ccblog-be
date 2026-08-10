@@ -15,6 +15,9 @@ userRouter.get(
   UserController.getAll,
 );
 
+// Atualizar próprio perfil (nome e foto)
+userRouter.patch("/profile", UserController.updateProfile);
+
 // Ver usuário específico (próprio perfil ou todos se ADMIN)
 userRouter.get(
   "/:id",
