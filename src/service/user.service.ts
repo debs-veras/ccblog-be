@@ -42,16 +42,11 @@ export class UserService {
     return UserRepository.update(userId, data);
   }
 
-  // Atualizar usuário (sem alterar senha)
+  // Atualizar usuário (sem alterar senha e email)
   static async updateUser(id: string, data: UpdateUserInput) {
     const user = await UserRepository.findById(id);
     if (!user) throw new AppError("Usuário não encontrado", 404);
-
-    // Evita atualizar email para um já existente
-    if (data.email && data.email !== user.email) {
-      const existingUser = await UserRepository.findByEmail(data.email);
-      if (existingUser) throw new AppError("Email já está em uso", 400);
-    }
+    delete (data as any).email;
     return UserRepository.update(id, data);
   }
 

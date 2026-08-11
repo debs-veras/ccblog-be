@@ -8,10 +8,9 @@ export const registerUserSchema = z.object({
   role: z.enum(["ADMIN", "STUDENT", "TEACHER"]).optional(),
 });
 
-// Schema de atualização de usuário (sem senha)
+// Schema de atualização de usuário (sem senha e sem email)
 export const updateUserSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório").optional(),
-  email: z.email("Email inválido").optional(),
   role: z.enum(["ADMIN", "STUDENT", "TEACHER"]).optional(),
   avatarUrl: z.string().nullable().optional(),
 });
