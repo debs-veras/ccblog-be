@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { sendSuccess } from "../util/response";
 import { UserService } from "../service/user.service";
 import { registerUserSchema, updateUserSchema } from "@schemas/user.shema";
+import { AppError } from "errors/appError";
 
 export class UserController {
   static async getAll(req: Request, res: Response, next: NextFunction) {
@@ -48,7 +49,7 @@ export class UserController {
   static async updateProfile(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.id;
-      if (!userId) throw { statusCode: 401, message: "Usuário não autenticado" };
+      if (!userId) throw new AppError("Usuário não autenticado", 401);
       const { name, avatarUrl } = req.body;
       const user = await UserService.updateProfile(userId, { name, avatarUrl });
       return sendSuccess(res, "Perfil atualizado com sucesso", user);

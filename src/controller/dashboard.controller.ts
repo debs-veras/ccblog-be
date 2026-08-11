@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { DashboardService } from "service/dashboard.service";
 import { sendSuccess } from "util/response";
 
+
 export class DashboardController {
   static async getStudentDashboard(req: Request, res: Response, next: NextFunction) {
     try {

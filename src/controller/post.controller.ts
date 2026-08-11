@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { sendSuccess } from "../util/response";
 import { PostService } from "../service/post.service";
+
 export class PostController {
   static async getAll(req: Request, res: Response, next: NextFunction) {
     try {
@@ -93,9 +94,7 @@ export class PostController {
     try {
       const { id } = req.params;
       const result = await PostService.publishPost(id as string);
-      const message = result.published
-        ? "Post publicado com sucesso"
-        : "Post despublicado com sucesso";
+      const message = result.published ? "Post publicado com sucesso" : "Post despublicado com sucesso";
       return sendSuccess(res, message, result.post);
     } catch (err) {
       next(err);

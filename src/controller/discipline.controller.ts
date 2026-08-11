@@ -1,9 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { sendSuccess } from "../util/response";
-import {
-  createDisciplineSchema,
-  updateDisciplineSchema
-} from "@schemas/discipline.schema";
+import { createDisciplineSchema, updateDisciplineSchema } from "@schemas/discipline.schema";
 import { DisciplineService } from "service/discipline.service";
 
 export class DisciplineController {

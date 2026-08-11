@@ -3,8 +3,8 @@ import { z } from "zod";
 export const registerPostSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
   description: z.string().optional().nullable(),
-  categoryId: z.string().uuid("ID de categoria inválido").optional().nullable(),
-  authorId: z.string().uuid("ID de autor inválido"),
+  categoryId: z.uuid("ID de categoria inválido").optional().nullable(),
+  authorId: z.uuid("ID de autor inválido"),
   content: z.string().min(1, "Conteúdo é obrigatório"),
   slug: z
     .string()

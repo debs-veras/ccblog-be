@@ -1,8 +1,5 @@
 import { prisma } from "../lib/prisma";
-import {
-  CreateCategoryInput,
-  UpdateCategoryInput,
-} from "../schemas/category.schema";
+import { CreateCategoryInput, UpdateCategoryInput } from "../schemas/category.schema";
 
 export class CategoryRepository {
   async findAll() {

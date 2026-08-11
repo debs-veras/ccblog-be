@@ -6,30 +6,11 @@ import { roleMiddleware } from "middleware/permissions.middleware";
 const categoryRouter: ExpressRouter = Router();
 // Rotas públicas
 categoryRouter.get("/", CategoryController.getAll);
+
 // Rotas protegidas (apenas ADMIN)
-categoryRouter.get(
-  "/:id",
-  authMiddleware,
-  roleMiddleware(["ADMIN"]),
-  CategoryController.getById,
-);
-categoryRouter.post(
-  "/",
-  authMiddleware,
-  roleMiddleware(["ADMIN"]),
-  CategoryController.create,
-);
-categoryRouter.put(
-  "/:id",
-  authMiddleware,
-  roleMiddleware(["ADMIN"]),
-  CategoryController.update,
-);
-categoryRouter.delete(
-  "/:id",
-  authMiddleware,
-  roleMiddleware(["ADMIN"]),
-  CategoryController.delete,
-);
+categoryRouter.get("/:id", authMiddleware, roleMiddleware(["ADMIN"]), CategoryController.getById);
+categoryRouter.post( "/", authMiddleware, roleMiddleware(["ADMIN"]), CategoryController.create);
+categoryRouter.put("/:id", authMiddleware, roleMiddleware(["ADMIN"]), CategoryController.update);
+categoryRouter.delete("/:id", authMiddleware, roleMiddleware(["ADMIN"]), CategoryController.delete);
 
 export default categoryRouter;

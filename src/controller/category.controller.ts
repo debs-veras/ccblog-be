@@ -1,10 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { CategoryService } from "../service/category.service";
 import { sendSuccess } from "../util/response";
-import {
-  createCategorySchema,
-  updateCategorySchema,
-} from "../schemas/category.schema";
+import { createCategorySchema, updateCategorySchema } from "../schemas/category.schema";
 
 export class CategoryController {
   static async getAll(_req: Request, res: Response, next: NextFunction) {

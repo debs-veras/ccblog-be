@@ -3,7 +3,6 @@ import { Router, type Router as ExpressRouter } from "express";
 import { authMiddleware } from "middleware/auth.middleware";
 import { ownershipMiddleware } from "middleware/ownership.middleware";
 import { roleMiddleware } from "middleware/permissions.middleware";
-// import { auditMiddleware } from "middleware/audit.middleware";
 import { rateLimitMiddleware } from "middleware/rate-limit.middleware";
 
 const postRouter: ExpressRouter = Router();
@@ -40,7 +39,6 @@ postRouter.post(
   rateLimitMiddleware(20, 60 * 60 * 1000),
   authMiddleware,
   roleMiddleware(["ADMIN", "TEACHER", 'STUDENT']),
-  // auditMiddleware("create", "post"),
   PostController.create,
 );
 // Atualizar posts (próprios ou todos se ADMIN)
@@ -49,7 +47,6 @@ postRouter.put(
   authMiddleware,
   roleMiddleware(["ADMIN", "TEACHER", 'STUDENT']),
   ownershipMiddleware("post"),
-  // auditMiddleware("update", "post"),
   PostController.update,
 );
 // Deletar posts (próprios ou todos se ADMIN)
@@ -58,7 +55,6 @@ postRouter.delete(
   authMiddleware,
   roleMiddleware(["ADMIN", "TEACHER", 'STUDENT']),
   ownershipMiddleware("post"),
-  // auditMiddleware("delete", "post"),
   PostController.delete,
 );
 // Publicar post (próprios ou todos se ADMIN)
@@ -67,7 +63,6 @@ postRouter.patch(
   authMiddleware,
   roleMiddleware(["ADMIN", "TEACHER"]),
   ownershipMiddleware("post"),
-  // auditMiddleware("publish", "post"),
   PostController.publish,
 );
 

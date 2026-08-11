@@ -1,7 +1,4 @@
-import {
-  CreateDisciplineInput,
-  UpdateDisciplineInput,
-} from "@schemas/discipline.schema";
+import { CreateDisciplineInput, UpdateDisciplineInput} from "@schemas/discipline.schema";
 import { DisciplineFilter } from "models/discipline.model";
 import { DisciplineRepository } from "repositories/discipline.repository";
 import { UserRepository } from "repositories/user.repository";
@@ -11,9 +8,7 @@ import { AppError } from "errors/appError";
 import { ErrorCodes } from "errors/errorCodes";
 
 export class DisciplineService {
-  private static validateInternalSchedules(
-    schedules: { dayOfWeek: number; startTime: string; endTime: string }[],
-  ) {
+  private static validateInternalSchedules(schedules: { dayOfWeek: number; startTime: string; endTime: string }[]) {
     for (let i = 0; i < schedules.length; i++) {
       for (let j = i + 1; j < schedules.length; j++) {
         const sched1 = schedules[i];
@@ -32,9 +27,7 @@ export class DisciplineService {
   static async createDiscipline(data: CreateDisciplineInput) {
     if (data.schedules) this.validateInternalSchedules(data.schedules);
     if (data.prerequisiteIds && data.prerequisiteIds.length > 0) {
-      const prereqs = await Promise.all(
-        data.prerequisiteIds.map((id) => DisciplineRepository.findById(id)),
-      );
+      const prereqs = await Promise.all(data.prerequisiteIds.map((id) => DisciplineRepository.findById(id)));
       const invalid = prereqs.some((d) => !d);
       if (invalid) throw new AppError(ErrorCodes.DISCIPLINE_NOT_FOUND, 404);
     }

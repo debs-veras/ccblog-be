@@ -2,7 +2,7 @@ import { CreateEnrollmentInput } from "schemas/enrollment.schema";
 import { EnrollmentRepository } from "repositories/enrollment.repository";
 import { DisciplineRepository } from "repositories/discipline.repository";
 import { UserRepository } from "repositories/user.repository";
-import { prisma } from "lib/prisma";
+import { AppError } from "errors/appError";
 
 export class EnrollmentService {
   /**
@@ -18,15 +18,14 @@ export class EnrollmentService {
     // 1. Validar usuário
     const student = await UserRepository.findById(data.studentId);
     if (!student || student.role !== "STUDENT")
-      throw {
-        statusCode: 400,
-        message:
-          "Estudante não encontrado ou usuário não possui papel de estudante",
-      };
+      throw new AppError("Estudante não encontrado ou usuário não possui papel de estudante", 400);
+
     // 2. Validar disciplina
     const discipline = await DisciplineRepository.findById(data.disciplineId);
-    if (!discipline)
-      throw { statusCode: 400, message: "Disciplina não encontrada" };
+    if (!discipline) {
+      throw new AppError("Disciplina não encontrada", 404);
+    }
+
     // 3. Verificar matrícula existente
     const existing = await EnrollmentRepository.findUnique(
       data.studentId,
@@ -35,68 +34,41 @@ export class EnrollmentService {
     );
 
     if (existing) {
-      if (existing.status === "PASSED") {
-        throw {
-          statusCode: 400,
-          message: "Disciplina já foi concluída",
-        };
-      }
-
-      if (existing.status === "ENROLLED") {
-        throw {
-          statusCode: 400,
-          message:
-            "Estudante já está matriculado nesta disciplina para este período",
-        };
-      }
+      if (existing.status === "PASSED") 
+        throw new AppError("Disciplina já foi concluída", 400);
+      if (existing.status === "ENROLLED") 
+        throw new AppError("Estudante já está matriculado nesta disciplina para este período", 400);
     }
 
     // 4. Validar pré-requisitos
     if (discipline.prerequisites && discipline.prerequisites.length > 0) {
-      const allEnrollments = await EnrollmentRepository.findByStudentId(
-        data.studentId,
-      );
+      const allEnrollments = await EnrollmentRepository.findByStudentId(data.studentId);
 
-      const passedDisciplinesIds = allEnrollments
-        .filter((e) => e.status === "PASSED")
-        .map((e) => e.disciplineId);
+      const passedDisciplinesIds = allEnrollments.filter((e) => e.status === "PASSED").map((e) => e.disciplineId);
 
       for (const pre of discipline.prerequisites) {
-        if (!passedDisciplinesIds.includes(pre.prerequisiteId)) {
-          throw new Error(
-            `Estudante não possui o pré-requisito: ${pre.prerequisite.name} (${pre.prerequisite.code})`,
-          );
-        }
+        if (!passedDisciplinesIds.includes(pre.prerequisiteId)) 
+          throw new AppError(`Estudante não possui o pré-requisito: ${pre.prerequisite.name} (${pre.prerequisite.code})`, 400);   
       }
     }
 
     // 5. Validar choque de horários
-    const currentEnrollments = await EnrollmentRepository.findByStudentId(
-      data.studentId,
-      data.period,
-    );
-
-    const activeEnrollments = currentEnrollments.filter(
-      (e) => e.status === "ENROLLED",
-    );
+    const currentEnrollments = await EnrollmentRepository.findByStudentId(data.studentId, data.period);
+    const activeEnrollments = currentEnrollments.filter((e) => e.status === "ENROLLED");
 
     for (const enrollment of activeEnrollments) {
       for (const currentSched of enrollment.discipline.schedules) {
         for (const targetSched of discipline.schedules) {
           const isSameDay = currentSched.dayOfWeek === targetSched.dayOfWeek;
 
-          const isOverlapping =
-            currentSched.startTime < targetSched.endTime &&
-            targetSched.startTime < currentSched.endTime;
+          const isOverlapping = currentSched.startTime < targetSched.endTime && targetSched.startTime < currentSched.endTime;
 
-          if (isSameDay && isOverlapping)
-            throw {
-              statusCode: 400,
-              message: `Choque de horário com a disciplina já matriculada: ${enrollment.discipline.name}`,
-            };
+          if (isSameDay && isOverlapping) 
+            throw new AppError(`Choque de horário com a disciplina já matriculada: ${enrollment.discipline.name}`, 400);
         }
       }
     }
+
     return EnrollmentRepository.create(data);
   }
 
@@ -107,7 +79,7 @@ export class EnrollmentService {
   static async canRemoveEnrollment(enrollmentId: string) {
     const enrollment = await EnrollmentRepository.findById(enrollmentId);
     if (!enrollment)
-      throw { statusCode: 400, message: "Matrícula não encontrada" };
+      throw new AppError("Matrícula não encontrada", 404);
 
     const studentId = enrollment.studentId;
     const disciplineId = enrollment.disciplineId;
@@ -116,17 +88,14 @@ export class EnrollmentService {
     for (const e of allEnrollments) {
       if (e.disciplineId === disciplineId) continue;
       const prerequisites = e.discipline.prerequisites || [];
-      const isRequired = prerequisites.some(
-        (p) => p.prerequisiteId === disciplineId,
-      );
+      const isRequired = prerequisites.some((p) => p.prerequisiteId === disciplineId);
 
       if (isRequired && (e.status === "ENROLLED" || e.status === "PASSED")) {
-        const statusLabel =
-          e.status === "ENROLLED" ? "em andamento" : "já concluída";
-        throw {
-          statusCode: 400,
-          message: `Não pode remover "${enrollment.discipline.name}". Ela é pré-requisito de "${e.discipline.name}" (${statusLabel}).`,
-        };
+        const statusLabel = e.status === "ENROLLED" ? "em andamento" : "já concluída";
+        throw new AppError(
+          `Não pode remover "${enrollment.discipline.name}". Ela é pré-requisito de "${e.discipline.name}" (${statusLabel}).`,
+          400,
+        );
       }
     }
 
@@ -135,12 +104,15 @@ export class EnrollmentService {
 
   static async cancelEnrollment(id: string) {
     const enrollment = await EnrollmentRepository.findById(id);
-    if (!enrollment) throw new Error("Matrícula não encontrada");
+    if (!enrollment) throw new AppError("Matrícula não encontrada", 404);
     await this.canRemoveEnrollment(id);
     return EnrollmentRepository.delete(id);
   }
 
   static async updateStatus(id: string, status: any) {
+    const enrollment = await EnrollmentRepository.findById(id);
+    if (!enrollment) 
+      throw new AppError("Matrícula não encontrada", 404);
     return EnrollmentRepository.updateStatus(id, status);
   }
 }
